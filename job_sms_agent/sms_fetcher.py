@@ -52,7 +52,7 @@ def is_job_or_work_related(text: str) -> bool:
     lower = text.lower()
     return any(k.lower() in lower for k in SMS_JOB_KEYWORDS)
 
-def fetch_recent_sms_messages(limit: int = 100) -> Tuple[List[Dict[str, Any]], bool, str]:
+def fetch_recent_sms_messages(limit: int = 300) -> Tuple[List[Dict[str, Any]], bool, str]:
     """
     최근 수신된 SMS/iMessage 중 구직/일 관련 문자들을 추출합니다.
     반환값: (메시지 리스트, 권한 정상 여부, 상태 메시지)
