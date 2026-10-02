@@ -175,6 +175,36 @@ class SMSJobWindow:
             bg=self.card_bg, fg=self.text_sub, font=("SF Pro Text", 10)
         ).pack(anchor="w", pady=(4, 0))
 
+        # [NEW] 최주영 님 커리어 가이드 매칭 판정 카드
+        fit_eval = item.get("fit_eval", {})
+        if fit_eval:
+            fit_card = tk.Frame(self.scroll_frame, bg="#f8fafc", bd=1, relief="solid", padx=16, pady=10)
+            fit_card.pack(fill="x", pady=(0, 10))
+
+            badge_text = fit_eval.get("badge", "판정 정보 없음")
+            badge_color = fit_eval.get("color", "#0066cc")
+
+            f_header = tk.Frame(fit_card, bg="#f8fafc")
+            f_header.pack(fill="x")
+
+            tk.Label(
+                f_header, text="🎯 최주영 님 커리어 자산 매칭 판정",
+                bg="#f8fafc", fg="#0f172a", font=("SF Pro Text", 11, "bold")
+            ).pack(side="left")
+
+            tk.Label(
+                f_header, text=f" {badge_text} ",
+                bg=badge_color, fg="white", font=("SF Pro Text", 10, "bold"),
+                padx=6, pady=2
+            ).pack(side="right")
+
+            reason_text = f"• 사유: {fit_eval.get('reason', '')}\n• 권장 액션: {fit_eval.get('action_recommendation', '')}"
+            tk.Label(
+                fit_card, text=reason_text,
+                bg="#f8fafc", fg="#334155", font=("SF Pro Text", 10),
+                justify="left", wraplength=680
+            ).pack(anchor="w", pady=(6, 0))
+
         # 2. AI & 핵심 요약 카드
         summary_card = tk.Frame(self.scroll_frame, bg=self.card_bg, padx=16, pady=14, relief="solid", bd=1)
         summary_card.pack(fill="x", pady=(0, 10))

@@ -178,9 +178,23 @@ def summarize_job_email(email_data: Dict[str, Any]) -> Dict[str, Any]:
     content = email_data.get("content", "")
     source = email_data.get("source", "")
     
-    # 1. Gemini 3.8 Flash High 요약 시도
-    from common.gemini_client import summarize_text_with_gemini
-    ai_summary = summarize_text_with_gemini(content[:3000], context_type=f"채용 공고 메일 (제목: {subject})")
+    # 1. 최주영 님 커리어 가이드 기반 적합도 판정
+    from common.career_profile import evaluate_job_match, get_career_summary_for_prompt
+    fit_eval = evaluate_job_match(title=subject, company=sender, content=content)
+
+    # 2. Gemini 3.8 Flash High 요약 시도 (커리어 가이드 컨텍스트 주입)
+    from common.gemini_client import call_gemini
+    gemini_prompt = (
+        f"{get_career_summary_for_prompt()}\n\n"
+        f"위 후보자(최주영 님)의 커리어 전략과 백그라운드를 기준으로 다음 채용 메일을 분석해주세요.\n"
+        f"- 메일 제목: {subject}\n"
+        f"- 발신자: {sender}\n"
+        f"- 본문:\n{content[:2500]}\n\n"
+        f"작성 규칙:\n"
+        f"1. 최주영 님에게 적합한 시니어 모바일/테크리드/Flutter/AI 관점에서 핵심 공고와 조건을 3줄로 요약\n"
+        f"2. 연차 상한(ATS) 주의점이나 추천/패스 사유를 한 줄 덧붙여주세요."
+    )
+    ai_summary = call_gemini(gemini_prompt, system_instruction="당신은 15년차 모바일 아키텍트 최주영 님의 전담 수석 커리어 에이전트입니다.")
 
     if ai_summary:
         pos_summary = ai_summary
@@ -204,7 +218,7 @@ def summarize_job_email(email_data: Dict[str, Any]) -> Dict[str, Any]:
         else:
             pos_summary = "\n".join([f"• {l}" for l in key_lines[:5]]) or "본문에서 추출된 채용 요약이 없습니다."
 
-    # 2. URL 추출 및 링크 요약
+    # 3. URL 추출 및 링크 요약
     urls = extract_urls(content, source)
     link_summaries = []
     
@@ -219,5 +233,6 @@ def summarize_job_email(email_data: Dict[str, Any]) -> Dict[str, Any]:
         "date": date_str,
         "job_summary": pos_summary,
         "links": link_summaries,
+        "fit_eval": fit_eval,
         "raw_content": content[:1500]
     }

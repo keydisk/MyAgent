@@ -14,18 +14,29 @@ macOS 환경에 특화된 지능형 자동화 에이전트 시스템입니다.
 ├── main.py                     # 통합 오케스트레이터 및 확장 가능한 CLI/인터랙티브 실행기
 ├── requirements.txt            # 시스템 환경 및 의존성 안내
 ├── README.md                   # 시스템 사용 설명서
+├── 최주영_커리어_자산_및_실행_가이드.md # 🎯 [핵심] 최주영 님 15년차 커리어 자산, 블랙리스트, 타깃 가이드
 ├── instructions_log.json       # 사용자가 창에서 입력한 지시사항 히스토리 로그
 ├── PENDING_INSTRUCTION.md      # 최신 접수된 지시사항 (에이전트 실시간 감지용)
 ├── output/                     # 생성된 PDF 리포트 및 로그 저장 디렉터리
 │   └── PaceSnap_Improvement_Ideas_YYYYMMDD.pdf
 │
-├── job_mail_agent/             # 📬 기능 1: 채용 메일 & 링크 요약 팝업 에이전트
+├── common/                     # 🧠 공통 유틸리티
+│   ├── gemini_client.py        # Gemini 3.8 Flash High 전용 클라이언트
+│   └── career_profile.py       # 커리어 가이드 연동 및 공고 적합도(S/A/B/F/블랙리스트) 평가 모듈
+│
+├── job_mail_agent/             # 📬 기능 1: 채용 메일 & 링크 요약 + 적합도 판정 에이전트
 │   ├── mail_fetcher.py         # AppleScript 기반 Mail.app 최근 메일 수집 및 채용 키워드 필터링
-│   ├── mail_analyzer.py        # MIME 디코딩, 본문 요약, 웹 링크 추출 및 실시간 크롤링 요약
-│   ├── mail_ui.py              # macOS 스타일 카드형 GUI 창 (메일별 요약 + 링크 요약 + 바로열기)
+│   ├── mail_analyzer.py        # 커리어 가이드 기반 공고 적합도 평가 및 Gemini 3.8 Flash High 요약
+│   ├── mail_ui.py              # macOS 스타일 카드형 GUI 창 (적합도 판정 카드 + 요약 + 링크)
 │   └── run.py                  # 단독 실행 모듈
 │
-├── project_ideator_agent/      # 🏃‍♂️ 기능 2 & 3: PaceSnap 개선 아이디어 PDF & 지시 콘솔
+├── job_sms_agent/              # 💬 기능 2: 구직/업무 문자 요약 + 적합도 판정 에이전트
+│   ├── sms_fetcher.py          # macOS chat.db 수집 및 구직 키워드 필터링
+│   ├── sms_analyzer.py         # 커리어 가이드 매칭 평가 및 문자 요약
+│   ├── sms_ui.py               # 문자 요약 카드형 GUI 창 (권한 안내 및 시스템 설정 열기)
+│   └── run.py                  # 단독 실행 모듈
+│
+├── project_ideator_agent/      # 🏃‍♂️ 기능 3 & 4: PaceSnap 개선 아이디어 PDF & 지시 콘솔
 │   ├── project_analyzer.py     # PhotoAndActivitiesApp 소스 코드, 기획서, 아키텍처 스캔
 │   ├── idea_generator.py       # 최신 iOS 17/18, HealthKit, MapKit, 러닝 트렌드 기반 아이디어 5선 도출
 │   ├── pdf_generator.py        # Apple 스타일 화이트 테마 HTML 렌더링 -> Chrome Headless 고품질 PDF 변환
@@ -33,7 +44,7 @@ macOS 환경에 특화된 지능형 자동화 에이전트 시스템입니다.
 │   ├── schedule_manager.py     # macOS launchd 기반 평일(월~금) 오전 11:00 정각 자동 실행 스케줄러
 │   └── run.py                  # 단독 실행 모듈
 │
-└── github_manager/             # 🐙 기능 4: Git 및 GitHub 연동 관리자
+└── github_manager/             # 🐙 기능 5: Git 및 GitHub 연동 관리자
     └── git_service.py          # 로컬 git init, commit, gh CLI 기반 원격 저장소 생성 및 push
 ```
 

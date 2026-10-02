@@ -14,8 +14,15 @@ def summarize_sms(msg_data: Dict[str, Any]) -> Dict[str, Any]:
     date_str = msg_data.get("date", "")
     service = msg_data.get("service", "")
 
-    # 1. Gemini 3.8 Flash High 요약 시도
-    ai_summary = summarize_text_with_gemini(text, context_type="구직/채용 및 외주 업무")
+    # 1. 커리어 가이드 적합도 판정
+    from common.career_profile import evaluate_job_match, get_career_summary_for_prompt
+    fit_eval = evaluate_job_match(title=text[:40], company=sender, content=text)
+
+    # 2. Gemini 3.8 Flash High 요약 시도
+    ai_summary = summarize_text_with_gemini(
+        f"{get_career_summary_for_prompt()}\n\n[수신 문자]\n{text}",
+        context_type="구직/채용 및 외주 업무"
+    )
 
     # AI 요약이 없으면 로컬 휴리스틱 요약 생성
     if not ai_summary:
@@ -31,7 +38,7 @@ def summarize_sms(msg_data: Dict[str, Any]) -> Dict[str, Any]:
     else:
         summary_text = ai_summary
 
-    # 2. 링크 추출 및 스크랩
+    # 3. 링크 추출 및 스크랩
     urls = extract_urls(text)
     link_summaries = []
     for u in urls[:2]:
@@ -43,6 +50,7 @@ def summarize_sms(msg_data: Dict[str, Any]) -> Dict[str, Any]:
         "date": date_str,
         "service": service,
         "summary": summary_text,
+        "fit_eval": fit_eval,
         "raw_text": text,
         "links": link_summaries
     }
