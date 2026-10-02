@@ -18,6 +18,7 @@ if CURRENT_DIR not in sys.path:
 
 # 모듈별 기능 임포트
 from job_mail_agent.run import run_job_mail_agent
+from job_sms_agent.run import run_job_sms_agent
 from project_ideator_agent.run import run_project_ideator
 from project_ideator_agent.schedule_manager import (
     install_launchd_schedule,
@@ -25,6 +26,7 @@ from project_ideator_agent.schedule_manager import (
     check_schedule_status
 )
 from github_manager.git_service import sync_and_push_repo, commit_changes
+from common.gemini_client import DEFAULT_MODEL
 
 # -------------------------------------------------------------
 # 확장 가능한 명령어 레지스트리 (Command Registry)
@@ -47,6 +49,19 @@ def cmd_check_mail(args):
     limit = getattr(args, 'limit', 30)
     no_gui = getattr(args, 'no_gui', False)
     run_job_mail_agent(limit=limit, no_gui=no_gui)
+
+def cmd_check_sms(args):
+    """구직 & 업무 관련 문자 요약 창 띄우기"""
+    limit = getattr(args, 'limit', 100)
+    no_gui = getattr(args, 'no_gui', False)
+    run_job_sms_agent(limit=limit, no_gui=no_gui)
+
+def cmd_check_jobs(args):
+    """메일과 문자에서 구직/채용/일 관련 내용 통합 확인"""
+    print("\n📬 [1/2] 채용 관련 수신 메일 스캔...")
+    cmd_check_mail(args)
+    print("\n💬 [2/2] 구직 및 업무 관련 수신 문자 스캔...")
+    cmd_check_sms(args)
 
 def cmd_ideate(args):
     """PhotoAndActivitiesApp 개선 아이디어 리포트 PDF 생성 및 지시 창"""
@@ -75,9 +90,11 @@ def cmd_sync_github(args):
 
 def cmd_all(args):
     """모든 주요 기능 일괄 순차 실행"""
-    print("\n[1/2] 채용 관련 메일 스캔 및 요약 창 실행")
+    print("\n[1/3] 채용 관련 메일 스캔 및 요약 창 실행")
     cmd_check_mail(args)
-    print("\n[2/2] PhotoAndActivitiesApp 아이디어 PDF 생성 및 지시 창 실행")
+    print("\n[2/3] 구직 및 업무 관련 문자 스캔 및 요약 창 실행")
+    cmd_check_sms(args)
+    print("\n[3/3] PhotoAndActivitiesApp 아이디어 PDF 생성 및 지시 창 실행")
     cmd_ideate(args)
 
 # -------------------------------------------------------------
@@ -88,6 +105,20 @@ register_command(
     handler=cmd_check_mail,
     description="macOS Mail.app에서 채용 관련 메일 및 링크를 스캔하여 요약 창 띄우기",
     category="메일 모니터링"
+)
+
+register_command(
+    name="check-sms",
+    handler=cmd_check_sms,
+    description="macOS 문자(SMS/iMessage)에서 구직 및 업무 관련 내용 요약 창 띄우기 (Gemini 3.8 Flash High)",
+    category="문자 모니터링"
+)
+
+register_command(
+    name="check-jobs",
+    handler=cmd_check_jobs,
+    description="메일과 문자의 채용/구직/업무 내용을 통합 스캔하여 요약 창 띄우기",
+    category="통합 모니터링"
 )
 
 register_command(
@@ -114,7 +145,7 @@ register_command(
 register_command(
     name="all",
     handler=cmd_all,
-    description="채용 메일 확인 및 프로젝트 아이디어 리포트 연속 실행",
+    description="채용 메일/문자 확인 및 프로젝트 아이디어 리포트 전체 실행",
     category="전체 실행"
 )
 
@@ -169,23 +200,33 @@ def main():
     p_mail.add_argument("--limit", type=int, default=30, help="스캔할 최근 메일 개수 (기본: 30)")
     p_mail.add_argument("--no-gui", action="store_true", help="GUI 창을 띄우지 않고 콘솔에만 출력")
 
-    # 2. ideate
+    # 2. check-sms
+    p_sms = subparsers.add_parser("check-sms", help=AGENT_REGISTRY["check-sms"]["description"])
+    p_sms.add_argument("--limit", type=int, default=100, help="스캔할 최근 문자 개수 (기본: 100)")
+    p_sms.add_argument("--no-gui", action="store_true", help="GUI 창을 띄우지 않고 콘솔에만 출력")
+
+    # 3. check-jobs
+    p_jobs = subparsers.add_parser("check-jobs", help=AGENT_REGISTRY["check-jobs"]["description"])
+    p_jobs.add_argument("--limit", type=int, default=50, help="스캔할 최근 항목 개수")
+    p_jobs.add_argument("--no-gui", action="store_true", help="GUI 창 생략")
+
+    # 4. ideate
     p_ideate = subparsers.add_parser("ideate", help=AGENT_REGISTRY["ideate"]["description"])
     p_ideate.add_argument("--no-gui", action="store_true", help="UI 창을 띄우지 않고 PDF만 생성")
 
-    # 3. schedule-ideator
+    # 5. schedule-ideator
     p_sched = subparsers.add_parser("schedule-ideator", help=AGENT_REGISTRY["schedule-ideator"]["description"])
     p_sched.add_argument("action", nargs="?", default="status", choices=["status", "install", "uninstall"],
                          help="스케줄 동작: status(상태확인), install(평일 오전 11시 등록), uninstall(해제)")
 
-    # 4. sync-github
+    # 6. sync-github
     p_git = subparsers.add_parser("sync-github", help=AGENT_REGISTRY["sync-github"]["description"])
     p_git.add_argument("--repo", default="MyAgent", help="GitHub 저장소 이름 (기본: MyAgent)")
     p_git.add_argument("--private", action="store_true", help="비공개 저장소로 생성")
 
-    # 5. all
+    # 7. all
     p_all = subparsers.add_parser("all", help=AGENT_REGISTRY["all"]["description"])
-    p_all.add_argument("--limit", type=int, default=30, help="스캔할 최근 메일 개수")
+    p_all.add_argument("--limit", type=int, default=30, help="스캔할 최근 메일/문자 개수")
     p_all.add_argument("--no-gui", action="store_true", help="GUI 창 생략")
 
     args = parser.parse_args()
