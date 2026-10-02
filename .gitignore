@@ -1,0 +1,26 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+ENV/
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Logs & temp
+output/*.log
+output/*.err
+output/*.temp.*
+output/temp_*
+*.log
+
+# IDE
+.idea/
+.vscode/

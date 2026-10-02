@@ -1,0 +1,10 @@
+# MyAgent Dependencies
+# 이 프로젝트는 macOS 기본 Python 3 환경(tkinter, urllib, email, subprocess 등)과
+# 시스템 도구(Google Chrome, AppleScript/osascript, GitHub CLI)를 활용하여
+# 별도의 외부 무거운 패키지 설치 없이 기본 환경에서 바로 작동하도록 최적화되어 있습니다.
+
+# 시스템 요구사항:
+# - macOS 12+ (Apple Mail.app, osascript)
+# - Google Chrome (/Applications/Google Chrome.app) - PDF 렌더링용
+# - GitHub CLI (gh) - GitHub 저장소 연동용
+# - Python 3.9+ (기본 내장 tkinter 포함)
