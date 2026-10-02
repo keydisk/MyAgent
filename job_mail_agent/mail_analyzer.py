@@ -178,28 +178,31 @@ def summarize_job_email(email_data: Dict[str, Any]) -> Dict[str, Any]:
     content = email_data.get("content", "")
     source = email_data.get("source", "")
     
-    # 1. 본문 텍스트 정리 및 구조화
-    lines = [line.strip() for line in content.split('\n') if line.strip()]
-    
-    # 핵심 채용 포지션 / 회사 / 조건 라인 탐색
-    positions = []
-    key_lines = []
-    
-    for line in lines:
-        # 공고 제목 또는 채용 포지션 패턴 (예: [회사명] 직무, 개발자, 엔지니어, 경력, 마감일 등)
-        if any(k in line for k in ["개발", "엔지니어", "모집", "채용", "기획", "디자이너", "경력", "신입", "정규직", "원격"]):
-            if len(line) < 100:
-                positions.append(line)
-        if len(key_lines) < 8 and len(line) > 10 and not line.startswith("http"):
-            key_lines.append(line)
+    # 1. Gemini 3.8 Flash High 요약 시도
+    from common.gemini_client import summarize_text_with_gemini
+    ai_summary = summarize_text_with_gemini(content[:3000], context_type=f"채용 공고 메일 (제목: {subject})")
 
-    # 본문 요약문 구성
-    if positions:
-        pos_summary = "\n".join([f"• {p}" for p in positions[:8]])
-        if len(positions) > 8:
-            pos_summary += f"\n... 외 {len(positions) - 8}개 항목"
+    if ai_summary:
+        pos_summary = ai_summary
     else:
-        pos_summary = "\n".join([f"• {l}" for l in key_lines[:5]]) or "본문에서 추출된 채용 요약이 없습니다."
+        # 본문 텍스트 정리 및 구조화 (휴리스틱 요약기)
+        lines = [line.strip() for line in content.split('\n') if line.strip()]
+        positions = []
+        key_lines = []
+        
+        for line in lines:
+            if any(k in line for k in ["개발", "엔지니어", "모집", "채용", "기획", "디자이너", "경력", "신입", "정규직", "원격"]):
+                if len(line) < 100:
+                    positions.append(line)
+            if len(key_lines) < 8 and len(line) > 10 and not line.startswith("http"):
+                key_lines.append(line)
+
+        if positions:
+            pos_summary = "\n".join([f"• {p}" for p in positions[:8]])
+            if len(positions) > 8:
+                pos_summary += f"\n... 외 {len(positions) - 8}개 항목"
+        else:
+            pos_summary = "\n".join([f"• {l}" for l in key_lines[:5]]) or "본문에서 추출된 채용 요약이 없습니다."
 
     # 2. URL 추출 및 링크 요약
     urls = extract_urls(content, source)

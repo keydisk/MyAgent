@@ -99,6 +99,17 @@ def generate_daily_ideas(project_info: Dict[str, Any] = None) -> Dict[str, Any]:
         }
     ]
 
+    from common.gemini_client import call_gemini
+    gemini_insight = call_gemini(
+        f"iOS 러닝 앱 PaceSnap 프로젝트의 다음 5대 아이디어 중 오늘의 최우선 권장 액션을 2문장으로 제안해주세요: "
+        f"{', '.join([i['title'] for i in ideas])}"
+    )
+
+    action_rec = gemini_insight if gemini_insight else (
+        "1순위로 'RootView 탭 바 개편 및 ActivitiesView 통합 연결' 작업을 시작하고, "
+        "이어 '인스타그램 9:16 템플릿 엔진' 브랜치를 생성하여 구현하는 것을 권장합니다."
+    )
+
     report_data = {
         "report_id": f"PACESNAP-IDEA-{date_code}",
         "title": "PaceSnap (PhotoAndActivities) 데일리 프로젝트 혁신 리포트",
@@ -108,7 +119,7 @@ def generate_daily_ideas(project_info: Dict[str, Any] = None) -> Dict[str, Any]:
         "key_findings": project_info.get("key_findings", []),
         "features": project_info.get("features", []),
         "ideas": ideas,
-        "author": "Antigravity AI Agent",
-        "action_recommendation": "1순위로 'RootView 탭 바 개편 및 ActivitiesView 통합 연결' 작업을 시작하고, 이어 '인스타그램 9:16 템플릿 엔진' 브랜치를 생성하여 구현하는 것을 권장합니다."
+        "author": "Antigravity AI Agent (Powered by Gemini 3.8 Flash High)",
+        "action_recommendation": action_rec
     }
     return report_data
