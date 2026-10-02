@@ -26,6 +26,8 @@ from project_ideator_agent.schedule_manager import (
     check_schedule_status
 )
 from github_manager.git_service import sync_and_push_repo, commit_changes
+from monetization_agent.run import run_monetization
+from monetization_agent.schedule import manage_schedule
 from common.gemini_client import DEFAULT_MODEL
 
 # -------------------------------------------------------------
@@ -67,6 +69,12 @@ def cmd_ideate(args):
     """PhotoAndActivitiesApp 개선 아이디어 리포트 PDF 생성 및 지시 창"""
     no_gui = getattr(args, 'no_gui', False)
     run_project_ideator(no_gui=no_gui)
+
+def cmd_monetization(args):
+    run_monetization(no_gui=getattr(args, 'no_gui', False))
+
+def cmd_schedule_monetization(args):
+    manage_schedule(getattr(args, 'action', 'status'))
 
 def cmd_schedule(args):
     """평일 오전 11시 스케줄 관리"""
@@ -135,6 +143,11 @@ register_command(
     category="스케줄링"
 )
 
+register_command("monetization", cmd_monetization,
+                 "PaceSnap 수익화 웹 조사 및 PDF 보고 (gpt-6-luna / medium)", "수익화 조사")
+register_command("schedule-monetization", cmd_schedule_monetization,
+                 "공휴일을 제외한 평일 11시 수익화 조사 예약 관리", "스케줄링")
+
 register_command(
     name="sync-github",
     handler=cmd_sync_github,
@@ -166,7 +179,7 @@ def run_interactive_menu():
     print("=" * 65)
     
     try:
-        choice = input("👉 실행할 기능의 번호를 입력하세요 (0~5): ").strip()
+        choice = input(f"👉 실행할 기능의 번호를 입력하세요 (0~{len(commands)}): ").strip()
         if choice == "0":
             print("프로그램을 종료합니다.")
             return
@@ -219,7 +232,13 @@ def main():
     p_sched.add_argument("action", nargs="?", default="status", choices=["status", "install", "uninstall"],
                          help="스케줄 동작: status(상태확인), install(평일 오전 11시 등록), uninstall(해제)")
 
-    # 6. sync-github
+    p_money = subparsers.add_parser("monetization", help=AGENT_REGISTRY["monetization"]["description"])
+    p_money.add_argument("--no-gui", action="store_true", help="알림 및 PDF 자동 열기 생략")
+    p_money_schedule = subparsers.add_parser("schedule-monetization", help=AGENT_REGISTRY["schedule-monetization"]["description"])
+    p_money_schedule.add_argument("action", nargs="?", default="status",
+                                choices=["status", "install", "uninstall"])
+
+    # sync-github
     p_git = subparsers.add_parser("sync-github", help=AGENT_REGISTRY["sync-github"]["description"])
     p_git.add_argument("--repo", default="MyAgent", help="GitHub 저장소 이름 (기본: MyAgent)")
     p_git.add_argument("--private", action="store_true", help="비공개 저장소로 생성")

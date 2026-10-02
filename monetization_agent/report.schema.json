@@ -1,0 +1,30 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["status", "calendar_reason", "calendar_source", "summary", "next_action", "sections", "sources"],
+  "properties": {
+    "status": {"type": "string", "enum": ["business_day", "holiday", "unverified"]},
+    "calendar_reason": {"type": "string"},
+    "calendar_source": {"type": "string"},
+    "summary": {"type": "string"},
+    "next_action": {"type": "string"},
+    "sections": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["heading", "body"],
+        "properties": {"heading": {"type": "string"}, "body": {"type": "string"}}
+      }
+    },
+    "sources": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["title", "url"],
+        "properties": {"title": {"type": "string"}, "url": {"type": "string"}}
+      }
+    }
+  }
+}

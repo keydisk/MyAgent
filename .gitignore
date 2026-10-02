@@ -20,6 +20,7 @@ output/*.err
 output/*.temp.*
 output/temp_*
 *.log
+output/monetization/
 
 # IDE
 .idea/

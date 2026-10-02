@@ -120,3 +120,37 @@ python3 main.py sync-github
        category="알림"
    )
    ```
+# PaceSnap 수익화 조사
+
+`monetization_agent/`에서 로그인된 Codex CLI를 사용해 매번 웹을 조사합니다.
+모델은 `gpt-6-luna`, 생각 수준은 `medium`입니다. 고정 아이디어 목록을 사용하지 않습니다.
+
+```bash
+python3 main.py monetization                    # 조사 → PDF → macOS 알림 및 PDF 열기
+python3 main.py monetization --no-gui           # 조사 및 파일 생성만
+python3 main.py schedule-monetization install  # 평일 11시 예약 등록
+python3 main.py schedule-monetization status
+python3 main.py schedule-monetization uninstall
+python3 -m unittest monetization_agent.test_run
+```
+
+Codex CLI 설치와 `codex login`이 필요합니다. PDF는 Codex 번들 Python의 ReportLab과
+macOS AppleGothic 폰트를 사용합니다. 번들 런타임이 없으면 `python3 -m pip install
+reportlab`을 실행하세요. 별도 API 키는 필요하지 않습니다. 예약 설치 시 사용한 Python 및 이 폴더의 `main.py`를
+launchd가 실행하므로 폴더를 옮기면 예약을 다시 설치하세요. Mac의 시스템 시간대는
+Asia/Seoul이어야 하며, 로그인 상태로 Mac이 켜져 있어야 합니다. 잠자기 중 놓친
+실행은 Mac이 깨어난 뒤 실행될 수 있습니다. 오전 11시에 조사를 시작하고 완료 후
+보고하므로 정확히 11시에 완성본이 도착하는 것은 아닙니다.
+
+주말은 즉시 건너뛰며 대한민국 공휴일·대체공휴일·임시공휴일은 매 실행 시 최신
+웹 출처로 확인합니다. 휴일에는 보고하지 않고 확인 실패 시 실패 알림을 표시합니다.
+성공한 보고서 또는 확인된 휴일은 날짜별로 저장하여 같은 날 중복 실행하지 않습니다.
+macOS의 알림 허용 및 집중 모드 설정에 따라 알림 표시가 달라질 수 있습니다.
+
+산출물은 `output/monetization/PaceSnap-YYYY-MM-DD.pdf`, 같은 이름의 JSON/HTML이며
+실행 로그도 해당 폴더에 있습니다. 이전 보고서 5개를 참고하여 조사 반복을 줄입니다.
+대상 앱의 현재 브랜치 HEAD에서 분석용 worktree를 만들고 완료 후 제거합니다.
+커밋되지 않은 앱 변경은 분석에 포함하지 않습니다. README·앱 스토어 설명·기획서의
+발췌본을 모델에 제공하며 자격 증명이나 개인 사진·운동 데이터는 읽지 않습니다.
+PDF 생성 실패 시 HTML 원본을 남깁니다. 기존 `ideate`와 `schedule-ideator`는 별개의
+개선 아이디어 기능입니다.
